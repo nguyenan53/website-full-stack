@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage })
 
-router.post(`/upload`, upload.array("images", file), async (req, res) => {
+router.post(`/upload`, upload.array("images", 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: "No images uploaded" });
