@@ -139,3 +139,11 @@ export const deleteData = async (url) => {
   );
   return data;
 };
+
+export const deleteImages = async (url) => {
+  const { data } = await axios.delete(
+    process.env.REACT_APP_BASE_URL + url,
+    authConfig
+  );
+  return data;
+};
