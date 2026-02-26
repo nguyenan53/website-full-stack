@@ -276,31 +276,25 @@ router.post(`/signin`, async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    if (!email || !password) {
-      return res.status(400).json({ error: true, msg: "Email and password are required" });
-    }
-
     const existingUser = await User.findOne({ email: email });
     if (!existingUser) {
-      return res.status(404).json({ error: true, msg: "User not found!" });
+      res.status(404).json({ error: true, msg: "User not found!" });
+      return;
     }
 
     if (existingUser.isVerified === false) {
-      return res.status(403).json({
+      res.json({
         error: true,
         isVerify: false,
         msg: "Your account is not active yet please verify your account first or Sign Up with a new user",
       });
+      return;
     }
 
     const matchPassword = await bcrypt.compare(password, existingUser.password);
 
     if (!matchPassword) {
-      return res.status(400).json({ error: true, msg: "Invalid credentials" });
-    }
-
-    if (!process.env.JSON_WEB_TOKEN_SECRET_KEY) {
-      return res.status(500).json({ error: true, msg: "JWT secret is missing in server environment" });
+      return res.status(400).json({ error: true, msg: "Invailid credentials" });
     }
 
     const token = jwt.sign(
@@ -314,8 +308,8 @@ router.post(`/signin`, async (req, res) => {
       msg: "User Authenticated",
     });
   } catch (error) {
-    console.log("Error in /api/user/signin:", error);
-    return res.status(500).json({ error: true, msg: error?.message || "something went wrong" });
+    res.status(500).json({ error: true, msg: "something went wrong" });
+    return;
   }
 });
 
