@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post(`/upload`, upload.array("images", file), async (req, res) => {
+router.post(`/upload`, upload.array("images", 5), async (req, res) => {
   imagesArr = [];
 
   try {
@@ -276,25 +276,31 @@ router.post(`/signin`, async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    if (!email || !password) {
+      return res.status(400).json({ error: true, msg: "Email and password are required" });
+    }
+
     const existingUser = await User.findOne({ email: email });
     if (!existingUser) {
-      res.status(404).json({ error: true, msg: "User not found!" });
-      return;
+      return res.status(404).json({ error: true, msg: "User not found!" });
     }
 
     if (existingUser.isVerified === false) {
-      res.json({
+      return res.status(403).json({
         error: true,
         isVerify: false,
         msg: "Your account is not active yet please verify your account first or Sign Up with a new user",
       });
-      return;
     }
 
     const matchPassword = await bcrypt.compare(password, existingUser.password);
 
     if (!matchPassword) {
-      return res.status(400).json({ error: true, msg: "Invailid credentials" });
+      return res.status(400).json({ error: true, msg: "Invalid credentials" });
+    }
+
+    if (!process.env.JSON_WEB_TOKEN_SECRET_KEY) {
+      return res.status(500).json({ error: true, msg: "JWT secret is missing in server environment" });
     }
 
     const token = jwt.sign(
@@ -308,8 +314,8 @@ router.post(`/signin`, async (req, res) => {
       msg: "User Authenticated",
     });
   } catch (error) {
-    res.status(500).json({ error: true, msg: "something went wrong" });
-    return;
+    console.log("Error in /api/user/signin:", error);
+    return res.status(500).json({ error: true, msg: error?.message || "something went wrong" });
   }
 });
 
